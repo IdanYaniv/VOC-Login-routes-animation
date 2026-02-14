@@ -1,0 +1,3 @@
+- main → always stable
+- feature/* → structured improvements
+- exp/* → creative experiments
