@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useRef, useCallback, useState, useMemo } from "react";
 import {
   animatedRoutes,
   indicators,
@@ -39,6 +39,21 @@ export function LivingServiceMap() {
   const routeElsRef = useRef<Map<string, SVGPathElement>>(new Map());
   const glowRef = useRef<SVGCircleElement>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  // Intro tile overlay — 8×8 tiles with random reveal delays
+  const tileCells = useMemo(
+    () =>
+      Array.from({ length: 64 }, (_, i) => ({
+        key: i,
+        delay: Math.random() * 1.45, // stagger 0–1.45s; last tile gone by 1.7s
+      })),
+    []
+  );
+  const [introVisible, setIntroVisible] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setIntroVisible(false), 1750);
+    return () => clearTimeout(t);
+  }, []);
 
   // Check reduced motion preference
   useEffect(() => {
@@ -223,7 +238,7 @@ export function LivingServiceMap() {
   }, [prefersReducedMotion]);
 
   return (
-    <div className="map-fade-in relative h-full w-full overflow-hidden bg-[#F7F8FA]">
+    <div className="relative h-full w-full overflow-hidden bg-[#F7F8FA]">
       {/* Static map background (full Map.svg rendered as image) */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -301,6 +316,26 @@ export function LivingServiceMap() {
             </g>
           ))}
       </svg>
+
+      {/* Intro tile overlay — 8×8 grid, each tile randomly disappears over 1.7s */}
+      {introVisible && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-20 grid"
+          style={{
+            gridTemplateColumns: "repeat(8, 1fr)",
+            gridTemplateRows: "repeat(8, 1fr)",
+          }}
+        >
+          {tileCells.map(({ key, delay }) => (
+            <div
+              key={key}
+              className="tile-reveal"
+              style={{ animationDelay: `${delay}s` }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
